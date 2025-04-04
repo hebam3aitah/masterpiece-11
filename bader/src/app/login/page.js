@@ -79,7 +79,7 @@ export default function Login() {
           
           <div>
             <div className="flex justify-between items-center mb-1">
-              <Link href="/forgot-password" className="text-xs text-[#31124b] hover:text-[#fa9e1b] transition-colors">
+              <Link href="/ForgotPasswordPage" className="text-xs text-[#31124b] hover:text-[#fa9e1b] transition-colors">
                 نسيت كلمة المرور؟
               </Link>
               <label className="block text-right text-sm font-medium text-gray-700">
