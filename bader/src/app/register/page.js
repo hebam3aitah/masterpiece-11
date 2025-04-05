@@ -16,24 +16,58 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
 
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+  
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          address: formData.address,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        alert(data.message || "فشل في إنشاء الحساب");
+      } else {
+        alert("🎉 تم إنشاء الحساب بنجاح");
+  
+        // Optional: redirect to login
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error("❌ Register Error:", error);
+      alert("حدث خطأ أثناء إنشاء الحساب");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Handle form submission logic here
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   console.log("Form submitted:", formData);
+  //   // Handle form submission logic here
 
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Login submitted:", formData);
-      setLoading(false);
-      // Handle login logic here
-    }, 1500);
-  };
+  //   // Simulate API call
+  //   setTimeout(() => {
+  //     console.log("Login submitted:", formData);
+  //     setLoading(false);
+  //     // Handle login logic here
+  //   }, 1500);
+  // };
 
   return (
     <div

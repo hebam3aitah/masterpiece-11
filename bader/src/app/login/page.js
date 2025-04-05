@@ -15,18 +15,49 @@ export default function Login() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Login submitted:', formData);
+  
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        alert(data.message || 'حدث خطأ أثناء تسجيل الدخول');
+      } else {
+        console.log('✅ تسجيل الدخول ناجح:', data);
+  
+        // Store token if needed
+        localStorage.setItem('token', data.token);
+        // Redirect or show success
+        alert('🎉 تم تسجيل الدخول بنجاح');
+        // router.push('/dashboard'); // if you're using next/navigation
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      alert('فشل الاتصال بالخادم');
+    } finally {
       setLoading(false);
-      // Handle login logic here
-    }, 1500);
+    }
   };
+  
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+    
+  //   // Simulate API call
+  //   setTimeout(() => {
+  //     console.log('Login submitted:', formData);
+  //     setLoading(false);
+  //     // Handle login logic here
+  //   }, 1500);
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">

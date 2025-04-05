@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
   address: { type: String },
   profession: { type: String },
   experience: { type: String },
-  age:{type: Number},
+  birthDate: { type: Date },
+  IsConfirmed: { type: Boolean, default: false },
   registrationDate: { type: Date, default: Date.now },
   
 });
