@@ -10,7 +10,7 @@ export default function EmailVerificationPage() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '']);
   const [verificationStatus, setVerificationStatus] = useState(null); // null: لم يتم التحقق، true: تم بنجاح، false: فشل
-  const [timer, setTimer] = useState(120); // مؤقت زمني لإعادة إرسال الرمز (بالثواني)
+  const [timer, setTimer] = useState(10); // مؤقت زمني لإعادة إرسال الرمز (بالثواني)
   const [timerActive, setTimerActive] = useState(true);
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
   
@@ -21,14 +21,17 @@ export default function EmailVerificationPage() {
     // أو من query parameters:
     // const urlParams = new URLSearchParams(window.location.search);
     // const emailFromUrl = urlParams.get('email');
+    alert(emailFromStorage);
     
     if (emailFromStorage) {
-      setEmail(emailFromStorage);
-    } else {
-      // استخدم مثال بريد إلكتروني للعرض فقط (يجب إزالة هذا في الإنتاج)
-      setEmail('user@example.com');
+    alert(emailFromStorage);
+    setEmail(emailFromStorage);
     }
-  }, []);
+    else
+    {
+      alert("there an problem");
+    }
+    }, []);
   
   // التعامل مع إدخال OTP
   const handleOtpChange = (index, e) => {
@@ -69,40 +72,86 @@ export default function EmailVerificationPage() {
   };
   
   // التحقق من رمز OTP
-  const verifyOtp = (e) => {
+  const verifyOtp = async (e) => {
     e.preventDefault();
     const otpValue = otp.join('');
     if (otpValue.length !== 4) {
       alert('الرجاء إدخال رمز التحقق المكون من 4 أرقام');
       return;
     }
-    
-    // هنا يمكن إضافة منطق التحقق من الرمز مع الخادم
-    // هذا مجرد محاكاة للتحقق الناجح
-    setVerificationStatus(true);
-    
-    // في حالة النجاح، يمكن توجيه المستخدم إلى الصفحة التالية بعد 3 ثوانٍ
-    setTimeout(() => {
-      // يمكن استبدال هذا بالتوجيه إلى الصفحة المطلوبة
-      window.location.href = '/dashboard';
-    }, 3000);
-  };
   
-  // إعادة إرسال رمز OTP
-  const resendOtp = () => {
-    if (timer === 0) {
-      // إعادة تعيين المؤقت
-      setTimer(120);
-      setTimerActive(true);
-      
-      // هنا يمكن إضافة منطق إعادة إرسال الرمز
-      setOtp(['', '', '', '']); // إعادة تعيين حقول الإدخال
-      alert('تم إعادة إرسال رمز التحقق');
-      
-      // التركيز على الحقل الأول
-      inputRefs[0].current.focus();
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp: otpValue }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        alert(data.message || 'فشل التحقق');
+        setVerificationStatus(false);
+      } else {
+        setVerificationStatus(true);
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('❌ OTP Error:', err);
+      alert('فشل التحقق من الرمز');
+      setVerificationStatus(false);
     }
   };
+   // const verifyOtp = (e) => {
+  //   e.preventDefault();
+  //   const otpValue = otp.join('');
+  //   if (otpValue.length !== 4) {
+  //     alert('الرجاء إدخال رمز التحقق المكون من 4 أرقام');
+  //     return;
+  //   }
+    
+  //   // هنا يمكن إضافة منطق التحقق من الرمز مع الخادم
+  //   // هذا مجرد محاكاة للتحقق الناجح
+  //   setVerificationStatus(true);
+    
+  //   // في حالة النجاح، يمكن توجيه المستخدم إلى الصفحة التالية بعد 3 ثوانٍ
+  //   setTimeout(() => {
+  //     // يمكن استبدال هذا بالتوجيه إلى الصفحة المطلوبة
+  //     window.location.href = '/dashboard';
+  //   }, 3000);
+  // };
+  
+  // إعادة إرسال رمز OTP
+  const resendOtp = async () => {
+    if (timer === 0) {
+      setTimer(120);
+      setTimerActive(true);
+      setOtp(['', '', '', '']);
+      inputRefs[0].current.focus();
+  
+      try {
+        const response = await fetch('/api/auth/resend-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+  
+        const data = await response.json();
+  
+        if (!response.ok) {
+          alert(data.message || 'حدث خطأ أثناء إعادة إرسال الرمز');
+        } else {
+          alert('✅ تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني');
+        }
+      } catch (error) {
+        console.error('❌ Resend OTP Error:', error);
+        alert('حدث خطأ في الاتصال بالخادم');
+      }
+    }
+  };
+  
   
   // تأثير المؤقت
   useEffect(() => {

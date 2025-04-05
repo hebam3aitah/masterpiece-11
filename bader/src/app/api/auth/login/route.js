@@ -1,36 +1,41 @@
-import connectToDatabase from '@/lib/connectDb';
+import connectDB from '@/lib/connectDb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'test12341';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
     const { email, password } = await req.json();
 
-    await connectToDatabase();
+    await connectDB();
 
-    // 1. Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return Response.json({ message: 'هذا البريد غير مسجل' }, { status: 404 });
+      return Response.json({ message: 'البريد الإلكتروني غير مسجل' }, { status: 404 });
     }
 
-    // 2. Check password
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return Response.json({ message: 'كلمة المرور غير صحيحة' }, { status: 401 });
     }
 
-    // 3. Create JWT
+    // ⛔ Check if email not confirmed
+    if (!user.IsConfirmed) {
+      return Response.json({
+        message: 'يجب تأكيد البريد الإلكتروني أولاً',
+        unconfirmed: true,
+        email: user.email,
+      }, { status: 403 });
+    }
+
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: '2h' }
     );
 
-    // 4. Return success
     return Response.json({
       message: 'تم تسجيل الدخول بنجاح',
       token,
@@ -38,11 +43,11 @@ export async function POST(req) {
         name: user.name,
         email: user.email,
         role: user.role,
-      }
+      },
     });
 
-  } catch (error) {
-    console.error('Login error:', error);
-    return Response.json({ message: 'حدث خطأ في تسجيل الدخول' }, { status: 500 });
+  } catch (err) {
+    console.error('Login Error:', err);
+    return Response.json({ message: 'حدث خطأ أثناء تسجيل الدخول' }, { status: 500 });
   }
 }

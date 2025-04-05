@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   birthDate: { type: Date },
   IsConfirmed: { type: Boolean, default: false },
   registrationDate: { type: Date, default: Date.now },
-  
+  otpCode: { type: Number },
 });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);

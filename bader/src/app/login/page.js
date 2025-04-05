@@ -29,23 +29,31 @@ export default function Login() {
       const data = await response.json();
   
       if (!response.ok) {
+        if (data.unconfirmed) {
+          // Store email for verification page
+          sessionStorage.setItem('verificationEmail', data.email);
+          window.location.href = '/EmailVerification';
+  
+          // Redirect to email verification  
+          window.location.href = '/EmailVerification'; // ✅ Keep only this
+
+          return;
+        }
+  
         alert(data.message || 'حدث خطأ أثناء تسجيل الدخول');
       } else {
-        console.log('✅ تسجيل الدخول ناجح:', data);
-  
-        // Store token if needed
         localStorage.setItem('token', data.token);
-        // Redirect or show success
         alert('🎉 تم تسجيل الدخول بنجاح');
-        // router.push('/dashboard'); // if you're using next/navigation
+        window.location.href = '/dashboard';
       }
-    } catch (error) {
-      console.error('❌ Login error:', error);
+    } catch (err) {
+      console.error('❌ Login error:', err);
       alert('فشل الاتصال بالخادم');
     } finally {
       setLoading(false);
     }
   };
+  
   
   // const handleSubmit = (e) => {
   //   e.preventDefault();
